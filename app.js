@@ -111,7 +111,8 @@ function updateStatus(message = '') {
     statusEl.textContent = 'Set your name and color, then start. Drag can extend below board for max power.';
     return;
   }
-  statusEl.textContent = `${currentPlayer} turn • Coins left: ${coins.length}/${TOTAL_COINS}`;
+  const turnLabel = currentPlayer === playerName ? 'Player' : AI;
+  statusEl.textContent = `${turnLabel} turn • Coins left: ${coins.length}/${TOTAL_COINS}`;
 }
 
 function awardPoints(removedCoins) {
