@@ -55,13 +55,14 @@ function createCoins() {
     const startX = BOARD.x + BOARD.size / 2 - ((count - 1) * spacing) / 2;
     for (let i = 0; i < count; i += 1) {
       const color = (r + i) % 2 === 0 ? coinColor('white') : coinColor('black');
-      list.push({ x: startX + i * spacing, y, r: COIN_R, vx: 0, vy: 0, color, queen: false });
+      list.push({ x: startX + i * spacing, y, r: COIN_R, vx: 0, vy: 0, color, queen: false, owner: color === coinColor('white') ? 'white' : 'black' });
     }
     y += spacing;
   }
 
   list[9].color = '#d92f2f';
   list[9].queen = true;
+  list[9].owner = 'queen';
   return list.slice(0, TOTAL_COINS);
 }
 
@@ -115,16 +116,21 @@ function updateStatus(message = '') {
 
 function awardPoints(removedCoins) {
   if (!removedCoins.length) return;
-  let gained = 0;
+
   for (const coin of removedCoins) {
-    gained += coin.queen ? 2 : 1;
+    if (coin.owner === playerColor) {
+      scores.player += coin.queen ? 2 : 1;
+    } else if (coin.owner === aiColor) {
+      scores.ai += coin.queen ? 2 : 1;
+    } else {
+      if (currentPlayer === playerName) {
+        scores.player += 2;
+      } else {
+        scores.ai += 2;
+      }
+    }
   }
 
-  if (currentPlayer === playerName) {
-    scores.player += gained;
-  } else {
-    scores.ai += gained;
-  }
   refreshScoreboard();
   shakeFrames = 12;
 }
