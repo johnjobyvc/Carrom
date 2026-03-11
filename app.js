@@ -2,77 +2,102 @@ const canvas = document.getElementById('carromCanvas');
 const ctx = canvas.getContext('2d');
 const statusEl = document.getElementById('status');
 const resetBtn = document.getElementById('resetBtn');
+const startBtn = document.getElementById('startBtn');
+const playerNameInput = document.getElementById('playerNameInput');
+const colorSelect = document.getElementById('colorSelect');
+const playerNameLabel = document.getElementById('playerNameLabel');
+const playerColorLabel = document.getElementById('playerColorLabel');
+const aiColorLabel = document.getElementById('aiColorLabel');
+const playerScoreEl = document.getElementById('playerScore');
+const aiScoreEl = document.getElementById('aiScore');
 
 const BOARD = {
   x: 110,
   y: 110,
-  size: 580,
-  pocketR: 22,
-  wallDamping: 0.92,
-  friction: 0.992,
+  size: 680,
+  pocketR: 24,
+  wallDamping: 0.94,
+  friction: 0.995,
   minSpeed: 0.03
 };
 
-const COIN_R = 14;
-const STRIKER_R = 16;
+const COIN_R = 16;
+const STRIKER_R = 18;
 const TOTAL_COINS = 20;
-const HUMAN = 'You';
 const AI = 'AI';
 
 let coins = [];
 let striker = null;
 let dragging = false;
 let dragPoint = null;
-let currentPlayer = HUMAN;
+let currentPlayer = '';
 let shotInProgress = false;
 let aiScheduled = false;
+let gameStarted = false;
+let playerName = 'Player';
+let playerColor = 'white';
+let aiColor = 'black';
+let scores = { player: 0, ai: 0 };
+let shakeFrames = 0;
+
+function coinColor(colorName) {
+  return colorName === 'white' ? '#f8fafc' : '#1f2937';
+}
 
 function createCoins() {
   const list = [];
-  const rows = [3, 4, 5, 4, 3, 1];
+  const rows = [3, 4, 5, 4, 3, 1, 1, 1];
   const spacing = COIN_R * 2.15;
   let y = BOARD.y + BOARD.size / 2 - ((rows.length - 1) * spacing) / 2;
-  let colorToggle = true;
 
-  for (const count of rows) {
+  for (let r = 0; r < rows.length; r += 1) {
+    const count = rows[r];
     const startX = BOARD.x + BOARD.size / 2 - ((count - 1) * spacing) / 2;
     for (let i = 0; i < count; i += 1) {
-      list.push({
-        x: startX + i * spacing,
-        y,
-        r: COIN_R,
-        vx: 0,
-        vy: 0,
-        color: colorToggle ? '#f8fafc' : '#1f2937'
-      });
-      colorToggle = !colorToggle;
+      const color = (r + i) % 2 === 0 ? coinColor('white') : coinColor('black');
+      list.push({ x: startX + i * spacing, y, r: COIN_R, vx: 0, vy: 0, color, queen: false });
     }
     y += spacing;
   }
 
   list[9].color = '#d92f2f';
-  return list;
+  list[9].queen = true;
+  return list.slice(0, TOTAL_COINS);
 }
 
 function placeStriker(player) {
   striker = {
     x: BOARD.x + BOARD.size / 2,
-    y: player === HUMAN ? BOARD.y + BOARD.size - 58 : BOARD.y + 58,
+    y: player === playerName ? BOARD.y + BOARD.size - 62 : BOARD.y + 62,
     r: STRIKER_R,
     vx: 0,
     vy: 0,
-    color: '#c9b089'
+    color: player === playerName ? '#3b82f6' : '#f97316'
   };
 }
 
-function resetGame() {
+function refreshScoreboard() {
+  playerNameLabel.textContent = playerName;
+  playerColorLabel.textContent = `Color: ${playerColor}`;
+  aiColorLabel.textContent = `Color: ${aiColor}`;
+  playerScoreEl.textContent = String(scores.player);
+  aiScoreEl.textContent = String(scores.ai);
+}
+
+function startGame() {
+  playerName = playerNameInput.value.trim() || 'Player';
+  playerColor = colorSelect.value;
+  aiColor = playerColor === 'white' ? 'black' : 'white';
+  scores = { player: 0, ai: 0 };
   coins = createCoins();
+  currentPlayer = playerName;
   dragging = false;
   dragPoint = null;
-  currentPlayer = HUMAN;
   shotInProgress = false;
   aiScheduled = false;
+  gameStarted = true;
   placeStriker(currentPlayer);
+  refreshScoreboard();
   updateStatus();
 }
 
@@ -81,12 +106,31 @@ function updateStatus(message = '') {
     statusEl.textContent = message;
     return;
   }
+  if (!gameStarted) {
+    statusEl.textContent = 'Set your name and color, then start.';
+    return;
+  }
   statusEl.textContent = `${currentPlayer} turn • Coins left: ${coins.length}/${TOTAL_COINS}`;
+}
+
+function awardPoints(removedCoins) {
+  if (!removedCoins.length) return;
+  let gained = 0;
+  for (const coin of removedCoins) {
+    gained += coin.queen ? 2 : 1;
+  }
+
+  if (currentPlayer === playerName) {
+    scores.player += gained;
+  } else {
+    scores.ai += gained;
+  }
+  refreshScoreboard();
+  shakeFrames = 12;
 }
 
 function drawBoard() {
   const { x, y, size } = BOARD;
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   ctx.fillStyle = '#dcb27a';
   roundRect(ctx, x - 30, y - 30, size + 60, size + 60, 26);
@@ -98,17 +142,17 @@ function drawBoard() {
 
   ctx.strokeStyle = '#b96f5d';
   ctx.lineWidth = 2;
-  ctx.strokeRect(x + 40, y + 40, size - 80, size - 80);
+  ctx.strokeRect(x + 44, y + 44, size - 88, size - 88);
 
   ctx.beginPath();
-  ctx.arc(x + size / 2, y + size / 2, 70, 0, Math.PI * 2);
+  ctx.arc(x + size / 2, y + size / 2, 78, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(x + 130, y + size - 60);
-  ctx.lineTo(x + size - 130, y + size - 60);
-  ctx.moveTo(x + 130, y + 60);
-  ctx.lineTo(x + size - 130, y + 60);
+  ctx.moveTo(x + 140, y + size - 62);
+  ctx.lineTo(x + size - 140, y + size - 62);
+  ctx.moveTo(x + 140, y + 62);
+  ctx.lineTo(x + size - 140, y + 62);
   ctx.stroke();
 
   drawPocket(x, y);
@@ -152,7 +196,7 @@ function drawPullGuide() {
   if (!dragging || !dragPoint) return;
   const dx = striker.x - dragPoint.x;
   const dy = striker.y - dragPoint.y;
-  const strength = Math.min(100, Math.round(Math.hypot(dx, dy) / 2.2));
+  const strength = Math.min(100, Math.round(Math.hypot(dx, dy) / 2));
 
   ctx.beginPath();
   ctx.moveTo(striker.x, striker.y);
@@ -162,8 +206,8 @@ function drawPullGuide() {
   ctx.stroke();
 
   ctx.fillStyle = '#3d1f0f';
-  ctx.font = 'bold 18px sans-serif';
-  ctx.fillText(`Power ${strength}%`, dragPoint.x + 10, dragPoint.y - 10);
+  ctx.font = 'bold 20px sans-serif';
+  ctx.fillText(`Power ${strength}%`, dragPoint.x + 12, dragPoint.y - 12);
 }
 
 function movePiece(piece) {
@@ -208,7 +252,6 @@ function collide(a, b) {
   const nx = dx / dist;
   const ny = dy / dist;
   const overlap = minDist - dist;
-
   a.x -= nx * overlap * 0.5;
   a.y -= ny * overlap * 0.5;
   b.x += nx * overlap * 0.5;
@@ -219,7 +262,7 @@ function collide(a, b) {
   const impulse = dvx * nx + dvy * ny;
   if (impulse > 0) return;
 
-  const bounce = 0.95;
+  const bounce = 0.96;
   const j = -(1 + bounce) * impulse / 2;
   a.vx -= j * nx;
   a.vy -= j * ny;
@@ -238,16 +281,15 @@ function pocketed(piece) {
 }
 
 function isMoving() {
-  return [striker, ...coins].some((p) => Math.abs(p.vx) > 0 || Math.abs(p.vy) > 0);
+  return striker && [striker, ...coins].some((p) => Math.abs(p.vx) > 0 || Math.abs(p.vy) > 0);
 }
 
 function finishTurn() {
   if (coins.length === 0) {
-    updateStatus('All 20 coins pocketed! Reset to play again.');
+    updateStatus(`Game over! ${playerName}: ${scores.player} | AI: ${scores.ai}`);
     return;
   }
-
-  currentPlayer = currentPlayer === HUMAN ? AI : HUMAN;
+  currentPlayer = currentPlayer === playerName ? AI : playerName;
   placeStriker(currentPlayer);
   dragging = false;
   dragPoint = null;
@@ -256,65 +298,84 @@ function finishTurn() {
 }
 
 function aiTakeShot() {
-  if (currentPlayer !== AI || coins.length === 0 || shotInProgress || isMoving()) return;
+  if (currentPlayer !== AI || !gameStarted || shotInProgress || isMoving() || !coins.length) return;
 
   const target = coins.reduce((best, coin) => {
     const dist = Math.hypot(coin.x - striker.x, coin.y - striker.y);
     if (!best || dist < best.dist) return { coin, dist };
     return best;
   }, null)?.coin;
-
   if (!target) return;
+
   const dx = target.x - striker.x;
   const dy = target.y - striker.y;
   const len = Math.hypot(dx, dy) || 1;
-  const speed = 10;
 
-  striker.vx = (dx / len) * speed;
-  striker.vy = (dy / len) * speed;
+  striker.vx = (dx / len) * 15;
+  striker.vy = (dy / len) * 15;
   shotInProgress = true;
   updateStatus('AI shot in progress...');
 }
 
 function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (shakeFrames > 0) {
+    const offsetX = (Math.random() - 0.5) * 12;
+    const offsetY = (Math.random() - 0.5) * 12;
+    ctx.save();
+    ctx.translate(offsetX, offsetY);
+    shakeFrames -= 1;
+  }
+
   drawBoard();
 
-  movePiece(striker);
-  for (const coin of coins) movePiece(coin);
+  if (gameStarted) {
+    movePiece(striker);
+    for (const coin of coins) movePiece(coin);
 
-  for (let i = 0; i < coins.length; i += 1) {
-    collide(striker, coins[i]);
-    for (let j = i + 1; j < coins.length; j += 1) {
-      collide(coins[i], coins[j]);
+    for (let i = 0; i < coins.length; i += 1) {
+      collide(striker, coins[i]);
+      for (let j = i + 1; j < coins.length; j += 1) {
+        collide(coins[i], coins[j]);
+      }
+    }
+
+    const removedCoins = coins.filter((coin) => pocketed(coin));
+    if (removedCoins.length) {
+      awardPoints(removedCoins);
+      coins = coins.filter((coin) => !pocketed(coin));
+    }
+
+    for (const coin of coins) drawPiece(coin);
+    drawPiece(striker);
+    drawPullGuide();
+
+    if (shotInProgress && !isMoving()) {
+      finishTurn();
+      aiScheduled = false;
+    }
+
+    if (currentPlayer === AI && !shotInProgress && !aiScheduled && coins.length) {
+      aiScheduled = true;
+      setTimeout(() => {
+        aiTakeShot();
+        aiScheduled = false;
+      }, 550);
     }
   }
 
-  coins = coins.filter((coin) => !pocketed(coin));
-
-  for (const coin of coins) drawPiece(coin);
-  drawPiece(striker);
-  drawPullGuide();
-
-  if (shotInProgress && !isMoving()) {
-    finishTurn();
-    aiScheduled = false;
-  }
-
-  if (currentPlayer === AI && !shotInProgress && !aiScheduled) {
-    aiScheduled = true;
-    setTimeout(() => {
-      aiTakeShot();
-      aiScheduled = false;
-    }, 700);
+  if (shakeFrames > 0) {
+    ctx.restore();
   }
 
   requestAnimationFrame(render);
 }
 
 canvas.addEventListener('pointerdown', (e) => {
-  if (currentPlayer !== HUMAN || shotInProgress || isMoving()) return;
+  if (!gameStarted || currentPlayer !== playerName || shotInProgress || isMoving()) return;
   const pos = getPointerPos(e);
-  if (Math.hypot(pos.x - striker.x, pos.y - striker.y) <= striker.r + 10) {
+  if (Math.hypot(pos.x - striker.x, pos.y - striker.y) <= striker.r + 12) {
     dragging = true;
     dragPoint = pos;
   }
@@ -326,14 +387,12 @@ canvas.addEventListener('pointermove', (e) => {
 });
 
 canvas.addEventListener('pointerup', () => {
-  if (!dragging || !dragPoint || currentPlayer !== HUMAN) return;
+  if (!dragging || !dragPoint || currentPlayer !== playerName || !gameStarted) return;
   const dx = striker.x - dragPoint.x;
   const dy = striker.y - dragPoint.y;
-  const powerScale = 0.065;
-  const maxV = 18;
 
-  striker.vx = clamp(dx * powerScale, -maxV, maxV);
-  striker.vy = clamp(dy * powerScale, -maxV, maxV);
+  striker.vx = clamp(dx * 0.1, -27, 27);
+  striker.vy = clamp(dy * 0.1, -27, 27);
   dragging = false;
   dragPoint = null;
   shotInProgress = true;
@@ -354,7 +413,9 @@ function getPointerPos(e) {
   };
 }
 
-resetBtn.addEventListener('click', resetGame);
+startBtn.addEventListener('click', startGame);
+resetBtn.addEventListener('click', startGame);
 
-resetGame();
+refreshScoreboard();
+updateStatus();
 render();

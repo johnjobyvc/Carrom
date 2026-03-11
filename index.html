@@ -9,16 +9,42 @@
   <body>
     <main class="app">
       <h1>Carrom Playable Prototype</h1>
-      <p class="hint">Drag from striker to aim and set power, then release to shoot.</p>
 
-      <div class="board-shell">
-        <canvas id="carromCanvas" width="800" height="800" aria-label="Carrom board"></canvas>
-      </div>
-
-      <div class="status-row">
-        <p id="status">Coins left: 20</p>
+      <section class="setup-panel">
+        <label>
+          Your name
+          <input id="playerNameInput" type="text" maxlength="20" placeholder="Enter your name" value="Player" />
+        </label>
+        <label>
+          Choose your color
+          <select id="colorSelect">
+            <option value="white">White</option>
+            <option value="black">Black</option>
+          </select>
+        </label>
+        <button id="startBtn" type="button">Start Game</button>
         <button id="resetBtn" type="button">Reset Board</button>
-      </div>
+      </section>
+
+      <section class="game-row">
+        <div class="game-area">
+          <canvas id="carromCanvas" width="900" height="900" aria-label="Carrom board"></canvas>
+          <p id="status">Set your name and color, then start.</p>
+        </div>
+
+        <aside class="scoreboard">
+          <article class="player-card">
+            <h2 id="playerNameLabel">Player</h2>
+            <p id="playerColorLabel">Color: White</p>
+            <p>Score: <strong id="playerScore">0</strong></p>
+          </article>
+          <article class="player-card">
+            <h2 id="aiNameLabel">AI</h2>
+            <p id="aiColorLabel">Color: Black</p>
+            <p>Score: <strong id="aiScore">0</strong></p>
+          </article>
+        </aside>
+      </section>
     </main>
 
     <script src="app.js"></script>

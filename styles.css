@@ -1,9 +1,7 @@
 :root {
   --bg: #d79d52;
-  --board: #e6c08b;
-  --border: #8b5a2b;
-  --line: #b8695b;
   --text: #2a1a0f;
+  --card: #f0d4ab;
 }
 
 * {
@@ -13,31 +11,64 @@
 body {
   margin: 0;
   min-height: 100vh;
-  display: grid;
-  place-items: center;
   background: radial-gradient(circle at top, #e7ba79, var(--bg));
   font-family: Inter, system-ui, sans-serif;
   color: var(--text);
 }
 
 .app {
-  width: min(92vw, 880px);
-  text-align: center;
+  width: min(96vw, 1500px);
+  margin: 0 auto;
+  padding: 1rem;
 }
 
 h1 {
-  margin-bottom: 0.2rem;
+  text-align: center;
+  margin: 0.5rem 0 1rem;
 }
 
-.hint {
-  margin-top: 0;
-  opacity: 0.8;
+.setup-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.8rem;
+  justify-content: center;
+  margin-bottom: 0.8rem;
 }
 
-.board-shell {
+label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+
+input,
+select,
+button {
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #9f6c36;
+}
+
+button {
+  background: #76421f;
+  color: #fff;
+  cursor: pointer;
+}
+
+.game-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.game-area {
+  width: 75vw;
+  max-width: 1050px;
   background: #d7a867;
   border-radius: 18px;
-  padding: 14px;
+  padding: 12px;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
 }
 
@@ -45,23 +76,42 @@ canvas {
   width: 100%;
   height: auto;
   border-radius: 14px;
-  background: var(--board);
+  background: #e6c08b;
   border: 4px solid #e8cfab;
 }
 
-.status-row {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 1rem;
-  margin-top: 0.9rem;
+#status {
+  margin: 0.65rem 0 0;
+  text-align: center;
+  font-weight: 700;
 }
 
-button {
-  border: none;
-  padding: 0.6rem 0.9rem;
-  border-radius: 8px;
-  background: #76421f;
-  color: #fff;
-  cursor: pointer;
+.scoreboard {
+  min-width: 220px;
+  width: 23vw;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.player-card {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 0.7rem;
+  border: 1px solid #ab7741;
+}
+
+.player-card h2,
+.player-card p {
+  margin: 0.3rem 0;
+}
+
+@media (max-width: 980px) {
+  .game-row {
+    flex-direction: column;
+  }
+
+  .game-area,
+  .scoreboard {
+    width: 100%;
+  }
 }

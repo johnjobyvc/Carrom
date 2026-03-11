@@ -1,6 +1,6 @@
 # Carrom Multiplayer Game (Web Prototype)
 
-A playable browser prototype for a Carrom game focused on core striker + coin interaction, with a basic AI opponent.
+A playable browser prototype for a Carrom game focused on core striker + coin interaction, with a basic AI opponent, scoring, and player setup options.
 
 ## Project Overview
 
@@ -12,7 +12,12 @@ This project now includes a **playable single-board prototype** with:
 - Pull-strength guide line shown while dragging
 - Coin collision, wall bounce, friction, and pocket detection
 - Turn-based flow with a virtual AI player
+- Player name input before game start
+- Player color choice (AI gets the opposite color)
+- Live point calculation and score display under each player name
+- Screen shake effect when a coin is pocketed
 - Striker auto-returns to the active player side after each shot settles
+- Faster striker/coin movement tuning
 - Reset button for replay
 
 It also includes a complete product specification in `SPEC.md` for future multiplayer/backend development.
@@ -58,10 +63,13 @@ python3 -m http.server 8080
 Quick validation:
 
 1. Load the page
-2. Drag striker backward and release to shoot
-3. Confirm pull-strength line appears while dragging
-4. Confirm AI takes alternate turns
-5. Confirm striker automatically returns to current player side after movement stops
+2. Enter player name and choose color, then click Start Game
+3. Drag striker backward and release to shoot
+4. Confirm pull-strength line appears while dragging
+5. Confirm AI takes alternate turns from the opposite side
+6. Confirm striker automatically returns to current player side after movement stops
+7. Confirm scores increase and show under each player name
+8. Confirm screen shake occurs when coins are pocketed
 
 ## Controls
 
