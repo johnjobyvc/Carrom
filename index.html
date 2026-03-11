@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>カロム対戦プロトタイプ</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <section class="game-row">
+        <div class="game-area">
+          <canvas id="carromCanvas" width="900" height="1400" aria-label="カロム盤"></canvas>
+        </div>
+
+        <aside class="scoreboard">
+          <article class="player-card">
+            <h2 id="playerNameLabel">プレイヤー</h2>
+            <p id="playerColorLabel">色: 白</p>
+            <p>スコア: <strong id="playerScore">0</strong></p>
+          </article>
+          <article class="player-card">
+            <h2 id="aiNameLabel">AI</h2>
+            <p id="aiColorLabel">色: 黒</p>
+            <p>スコア: <strong id="aiScore">0</strong></p>
+          </article>
+
+          <section class="control-panel">
+            <h1>カロム対戦プロトタイプ</h1>
+            <p id="status">名前と色を選んで「開始」を押してください。</p>
+
+            <label>
+              あなたの名前
+              <input id="playerNameInput" type="text" maxlength="20" placeholder="名前を入力" value="プレイヤー" />
+            </label>
+            <label>
+              あなたの色
+              <select id="colorSelect">
+                <option value="white">白</option>
+                <option value="black">黒</option>
+              </select>
+            </label>
+            <div class="button-row">
+              <button id="startBtn" type="button">開始</button>
+              <button id="resetBtn" type="button">リセット</button>
+            </div>
+          </section>
+        </aside>
+      </section>
+      <div class="bottom-spacer" aria-hidden="true"></div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>

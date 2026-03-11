@@ -1,0 +1,126 @@
+:root {
+  --bg: #d79d52;
+  --text: #2a1a0f;
+  --card: #f0d4ab;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #e7ba79, var(--bg));
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--text);
+}
+
+.app {
+  width: min(96vw, 1500px);
+  margin: 0 auto;
+  padding: 0.25rem 1rem 1rem;
+}
+
+label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+
+input,
+select,
+button {
+  font: inherit;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  border: 1px solid #9f6c36;
+}
+
+button {
+  background: #76421f;
+  color: #fff;
+  cursor: pointer;
+}
+
+.game-row {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.game-area {
+  width: 75vw;
+  max-width: 1050px;
+  background: #d7a867;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.22);
+}
+
+canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+  background: #e6c08b;
+  border: 4px solid #e8cfab;
+}
+
+.scoreboard {
+  min-width: 260px;
+  width: 23vw;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.player-card,
+.control-panel {
+  background: var(--card);
+  border-radius: 12px;
+  padding: 0.7rem;
+  border: 1px solid #ab7741;
+}
+
+.player-card h2,
+.player-card p {
+  margin: 0.3rem 0;
+}
+
+.control-panel h1 {
+  font-size: 1.2rem;
+  margin: 0 0 0.4rem;
+}
+
+#status {
+  margin: 0 0 0.8rem;
+  font-weight: 700;
+}
+
+.control-panel {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.button-row {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.bottom-spacer {
+  height: 50vh;
+}
+
+@media (max-width: 980px) {
+  .game-row {
+    flex-direction: column;
+  }
+
+  .game-area,
+  .scoreboard {
+    width: 100%;
+  }
+
+  .bottom-spacer {
+    height: 35vh;
+  }
+}
