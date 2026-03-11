@@ -105,6 +105,10 @@ canvas {
   margin: 0.3rem 0;
 }
 
+.bottom-spacer {
+  height: 50vh;
+}
+
 @media (max-width: 980px) {
   .game-row {
     flex-direction: column;
@@ -113,5 +117,9 @@ canvas {
   .game-area,
   .scoreboard {
     width: 100%;
+  }
+
+  .bottom-spacer {
+    height: 35vh;
   }
 }

@@ -18,6 +18,8 @@ This project now includes a **playable single-board prototype** with:
 - Screen shake effect when a coin is pocketed
 - Striker auto-returns to the active player side after each shot settles
 - Faster striker/coin movement tuning
+- Extra empty space below board to allow long pull-back gestures
+- Smaller board scale for easier full-power drag
 - Reset button for replay
 
 It also includes a complete product specification in `SPEC.md` for future multiplayer/backend development.
@@ -70,6 +72,7 @@ Quick validation:
 6. Confirm striker automatically returns to current player side after movement stops
 7. Confirm scores increase and show under each player name
 8. Confirm screen shake occurs when coins are pocketed
+9. Confirm you can drag below board area to reach full power
 
 ## Controls
 

@@ -12,17 +12,17 @@ const playerScoreEl = document.getElementById('playerScore');
 const aiScoreEl = document.getElementById('aiScore');
 
 const BOARD = {
-  x: 110,
-  y: 110,
-  size: 680,
-  pocketR: 24,
-  wallDamping: 0.94,
-  friction: 0.995,
+  x: 190,
+  y: 90,
+  size: 260,
+  pocketR: 18,
+  wallDamping: 0.97,
+  friction: 0.996,
   minSpeed: 0.03
 };
 
-const COIN_R = 16;
-const STRIKER_R = 18;
+const COIN_R = 10;
+const STRIKER_R = 12;
 const TOTAL_COINS = 20;
 const AI = 'AI';
 
@@ -68,7 +68,7 @@ function createCoins() {
 function placeStriker(player) {
   striker = {
     x: BOARD.x + BOARD.size / 2,
-    y: player === playerName ? BOARD.y + BOARD.size - 62 : BOARD.y + 62,
+    y: player === playerName ? BOARD.y + BOARD.size - 38 : BOARD.y + 38,
     r: STRIKER_R,
     vx: 0,
     vy: 0,
@@ -107,7 +107,7 @@ function updateStatus(message = '') {
     return;
   }
   if (!gameStarted) {
-    statusEl.textContent = 'Set your name and color, then start.';
+    statusEl.textContent = 'Set your name and color, then start. Drag can extend below board for max power.';
     return;
   }
   statusEl.textContent = `${currentPlayer} turn • Coins left: ${coins.length}/${TOTAL_COINS}`;
@@ -133,26 +133,26 @@ function drawBoard() {
   const { x, y, size } = BOARD;
 
   ctx.fillStyle = '#dcb27a';
-  roundRect(ctx, x - 30, y - 30, size + 60, size + 60, 26);
+  roundRect(ctx, x - 20, y - 20, size + 40, size + 40, 20);
   ctx.fill();
 
   ctx.fillStyle = '#e9c594';
-  roundRect(ctx, x, y, size, size, 20);
+  roundRect(ctx, x, y, size, size, 14);
   ctx.fill();
 
   ctx.strokeStyle = '#b96f5d';
   ctx.lineWidth = 2;
-  ctx.strokeRect(x + 44, y + 44, size - 88, size - 88);
+  ctx.strokeRect(x + 22, y + 22, size - 44, size - 44);
 
   ctx.beginPath();
-  ctx.arc(x + size / 2, y + size / 2, 78, 0, Math.PI * 2);
+  ctx.arc(x + size / 2, y + size / 2, 46, 0, Math.PI * 2);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(x + 140, y + size - 62);
-  ctx.lineTo(x + size - 140, y + size - 62);
-  ctx.moveTo(x + 140, y + 62);
-  ctx.lineTo(x + size - 140, y + 62);
+  ctx.moveTo(x + 48, y + size - 38);
+  ctx.lineTo(x + size - 48, y + size - 38);
+  ctx.moveTo(x + 48, y + 38);
+  ctx.lineTo(x + size - 48, y + 38);
   ctx.stroke();
 
   drawPocket(x, y);
@@ -311,8 +311,8 @@ function aiTakeShot() {
   const dy = target.y - striker.y;
   const len = Math.hypot(dx, dy) || 1;
 
-  striker.vx = (dx / len) * 15;
-  striker.vy = (dy / len) * 15;
+  striker.vx = (dx / len) * 20.25;
+  striker.vy = (dy / len) * 20.25;
   shotInProgress = true;
   updateStatus('AI shot in progress...');
 }
@@ -321,8 +321,8 @@ function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   if (shakeFrames > 0) {
-    const offsetX = (Math.random() - 0.5) * 12;
-    const offsetY = (Math.random() - 0.5) * 12;
+    const offsetX = (Math.random() - 0.5) * 16;
+    const offsetY = (Math.random() - 0.5) * 16;
     ctx.save();
     ctx.translate(offsetX, offsetY);
     shakeFrames -= 1;
@@ -381,18 +381,18 @@ canvas.addEventListener('pointerdown', (e) => {
   }
 });
 
-canvas.addEventListener('pointermove', (e) => {
+window.addEventListener('pointermove', (e) => {
   if (!dragging) return;
   dragPoint = getPointerPos(e);
 });
 
-canvas.addEventListener('pointerup', () => {
+window.addEventListener('pointerup', () => {
   if (!dragging || !dragPoint || currentPlayer !== playerName || !gameStarted) return;
   const dx = striker.x - dragPoint.x;
   const dy = striker.y - dragPoint.y;
 
-  striker.vx = clamp(dx * 0.1, -27, 27);
-  striker.vy = clamp(dy * 0.1, -27, 27);
+  striker.vx = clamp(dx * 0.135, -36.45, 36.45);
+  striker.vy = clamp(dy * 0.135, -36.45, 36.45);
   dragging = false;
   dragPoint = null;
   shotInProgress = true;
