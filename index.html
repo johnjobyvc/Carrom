@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carrom Multiplayer Prototype</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <h1>Carrom Playable Prototype</h1>
+      <p class="hint">Drag from striker to aim and set power, then release to shoot.</p>
+
+      <div class="board-shell">
+        <canvas id="carromCanvas" width="800" height="800" aria-label="Carrom board"></canvas>
+      </div>
+
+      <div class="status-row">
+        <p id="status">Coins left: 20</p>
+        <button id="resetBtn" type="button">Reset Board</button>
+      </div>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
