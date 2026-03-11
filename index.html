@@ -7,64 +7,19 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="app-header">
-      <h1>Carrom Multiplayer</h1>
-      <p>Web UI prototype for gameplay, profile, and rankings.</p>
-    </header>
+    <main class="app">
+      <h1>Carrom Playable Prototype</h1>
+      <p class="hint">Drag from striker to aim and set power, then release to shoot.</p>
 
-    <main class="layout">
-      <section class="panel menu-panel">
-        <h2>Main Menu</h2>
-        <div class="menu-buttons">
-          <button>Play Online</button>
-          <button>Play with Friend</button>
-          <button>Play vs AI</button>
-          <button>Leaderboards</button>
-          <button>Settings</button>
-        </div>
-      </section>
+      <div class="board-shell">
+        <canvas id="carromCanvas" width="800" height="800" aria-label="Carrom board"></canvas>
+      </div>
 
-      <section class="panel board-panel">
-        <h2>Game Board Preview</h2>
-        <div class="board">
-          <span class="pocket top-left"></span>
-          <span class="pocket top-right"></span>
-          <span class="pocket bottom-left"></span>
-          <span class="pocket bottom-right"></span>
-
-          <span class="coin queen"></span>
-          <span class="coin white c1"></span>
-          <span class="coin black c2"></span>
-          <span class="coin white c3"></span>
-          <span class="striker"></span>
-        </div>
-      </section>
-
-      <section class="panel sidebar-panel">
-        <article class="card">
-          <h3>Player Profile</h3>
-          <ul>
-            <li><strong>Username:</strong> player01</li>
-            <li><strong>Level:</strong> 8</li>
-            <li><strong>Wins / Losses:</strong> 24 / 11</li>
-            <li><strong>Achievements:</strong> 6 unlocked</li>
-          </ul>
-        </article>
-
-        <article class="card">
-          <h3>Leaderboard (Weekly)</h3>
-          <ol>
-            <li>Ravi - 1480</li>
-            <li>Neha - 1425</li>
-            <li>player01 - 1390</li>
-          </ol>
-        </article>
-      </section>
+      <div class="status-row">
+        <p id="status">Coins left: 20</p>
+        <button id="resetBtn" type="button">Reset Board</button>
+      </div>
     </main>
-
-    <footer class="app-footer">
-      <p id="status">Ready to play.</p>
-    </footer>
 
     <script src="app.js"></script>
   </body>

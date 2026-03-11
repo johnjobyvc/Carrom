@@ -1,120 +1,67 @@
 # Carrom Multiplayer Game (Web Prototype)
 
-A lightweight **web prototype** for a Carrom Multiplayer Game. This repository currently contains:
-
-- A browser-based UI shell for a Carrom game experience
-- A structured software specification (`SPEC.md`)
-- Local development instructions for **GitHub Codespaces** on **Ubuntu 24.04.3 LTS**
-
----
+A playable browser prototype for a Carrom game focused on core striker + coin interaction.
 
 ## Project Overview
 
-This project targets an online Carrom experience inspired by popular web-based implementations. The long-term product goals are:
+This project now includes a **playable single-board prototype** with:
 
-- Single-player mode vs AI
-- Local multiplayer mode
-- Online multiplayer mode
-- Leaderboards, achievements, and rewards
-- Smooth physics-driven gameplay with responsive controls
+- Canvas-based carrom board
+- **20 total coins** on the board (including queen-style red coin)
+- Draggable striker aiming and shooting
+- Coin collision, wall bounce, friction, and pocket detection
+- Reset button for replay
 
-The current implementation is a front-end starter app that demonstrates:
-
-- Main menu with key game-mode actions
-- Player profile summary
-- Leaderboard preview
-- Game board mock-up section for UI/design direction
-
----
-
-## Tech Stack (Current Prototype)
-
-- HTML5
-- CSS3
-- Vanilla JavaScript
-- Local static server (`python3 -m http.server`)
-
----
+It also includes a complete product specification in `SPEC.md` for future multiplayer/backend development.
 
 ## Environment
 
-These instructions are tested for:
+Validated for:
 
-- **GitHub Codespaces**
-- **Ubuntu 24.04.3 LTS**
+- GitHub Codespaces
+- Ubuntu 24.04.3 LTS
 
----
+## Installation
 
-## Installation Instructions
-
-### 1) Open in Codespaces
-
-1. Open this repository in GitHub.
-2. Click **Code** → **Codespaces** → **Create codespace on main** (or your branch).
-
-### 2) Verify tools
-
-Run:
+1. Open repository in GitHub Codespaces.
+2. Verify Python is installed:
 
 ```bash
 python3 --version
 ```
 
-Python 3 is preinstalled in Codespaces and is enough to run the local test server.
+## Run the App
 
----
-
-## How to Run the App
-
-From the repository root:
+From repository root:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Then open:
+Open in browser:
 
 - `http://localhost:8080`
 
-In GitHub Codespaces, you can also open the forwarded port URL shown in the **Ports** tab.
+In Codespaces, you can use the forwarded port URL from the **Ports** tab.
 
----
+## Start the Test Server
 
-## How to Start the Test Server
-
-Use the same local static server command:
+Use:
 
 ```bash
 python3 -m http.server 8080
 ```
 
-Suggested quick test flow:
+Quick validation:
 
-1. Start server on port `8080`
-2. Open browser preview for `localhost:8080`
-3. Verify:
-   - Main menu buttons are visible
-   - Board mock section renders
-   - Leaderboard list and profile card appear
+1. Load the page
+2. Drag from striker and release to shoot
+3. Confirm coins move/collide and can be pocketed
+4. Confirm status updates coin count
 
----
+## Controls
 
-## Project Structure
-
-```text
-.
-├── index.html      # Main web app UI
-├── styles.css      # App styling and layout
-├── app.js          # Small UI interactions
-├── SPEC.md         # Software specification document
-└── README.md       # Setup and usage guide
-```
-
----
-
-## Next Steps
-
-- Integrate a physics engine for realistic striker/coin movement
-- Add WebSocket-based online multiplayer
-- Implement authentication and player progression
-- Connect leaderboard and rewards to a backend database
+- Click/touch the striker near the bottom line
+- Drag backward to set shot direction/power
+- Release to flick the striker
+- Press **Reset Board** to restart with 20 coins
