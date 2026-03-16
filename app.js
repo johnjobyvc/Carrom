@@ -16,6 +16,12 @@ const BOARD = {
 const COIN_R = 14;
 const STRIKER_R = 16;
 const TOTAL_COINS = 20;
+const STRIKER_BASELINE = {
+  leftOffset: 130,
+  rightOffset: 130,
+  yOffset: 60,
+  pickTolerance: 20
+};
 
 let coins = [];
 let striker = null;
@@ -52,7 +58,7 @@ function createCoins() {
 function createStriker() {
   return {
     x: BOARD.x + BOARD.size / 2,
-    y: BOARD.y + BOARD.size - 58,
+    y: baselineY(),
     r: STRIKER_R,
     vx: 0,
     vy: 0,
@@ -96,9 +102,13 @@ function drawBoard() {
   ctx.stroke();
 
   // Baseline and striker guide
+  const lineY = baselineY();
+  const lineLeft = baselineLeft();
+  const lineRight = baselineRight();
+
   ctx.beginPath();
-  ctx.moveTo(x + 130, y + size - 60);
-  ctx.lineTo(x + size - 130, y + size - 60);
+  ctx.moveTo(lineLeft, lineY);
+  ctx.lineTo(lineRight, lineY);
   ctx.stroke();
 
   // Pockets
@@ -258,6 +268,14 @@ function render() {
 canvas.addEventListener('pointerdown', (e) => {
   if (isMoving()) return;
   const pos = getPointerPos(e);
+
+  if (isOnStrikerBaseline(pos)) {
+    striker.x = clamp(pos.x, baselineLeft() + striker.r, baselineRight() - striker.r);
+    striker.y = baselineY();
+    striker.vx = 0;
+    striker.vy = 0;
+  }
+
   if (Math.hypot(pos.x - striker.x, pos.y - striker.y) <= striker.r + 10) {
     dragging = true;
     dragPoint = pos;
@@ -295,6 +313,24 @@ function getPointerPos(e) {
     x: (e.clientX - rect.left) * scaleX,
     y: (e.clientY - rect.top) * scaleY
   };
+}
+
+function baselineLeft() {
+  return BOARD.x + STRIKER_BASELINE.leftOffset;
+}
+
+function baselineRight() {
+  return BOARD.x + BOARD.size - STRIKER_BASELINE.rightOffset;
+}
+
+function baselineY() {
+  return BOARD.y + BOARD.size - STRIKER_BASELINE.yOffset;
+}
+
+function isOnStrikerBaseline(pos) {
+  const onHorizontalRange = pos.x >= baselineLeft() && pos.x <= baselineRight();
+  const closeToLine = Math.abs(pos.y - baselineY()) <= STRIKER_BASELINE.pickTolerance;
+  return onHorizontalRange && closeToLine;
 }
 
 resetBtn.addEventListener('click', resetGame);
