@@ -38,6 +38,10 @@ let playerName = 'プレイヤー';
 let playerColor = 'white';
 let aiColor = 'black';
 let scores = { player: 0, ai: 0 };
+let pocketedByPlayer = { white: 0, black: 0, queen: 0 };
+let pocketedByAI = { white: 0, black: 0, queen: 0 };
+let gameOver = false;
+let winnerLabel = '';
 let shakeFrames = 0;
 
 function coinColor(colorName) {
@@ -104,6 +108,10 @@ function startGame() {
   playerColor = colorSelect.value;
   aiColor = playerColor === 'white' ? 'black' : 'white';
   scores = { player: 0, ai: 0 };
+  pocketedByPlayer = { white: 0, black: 0, queen: 0 };
+  pocketedByAI = { white: 0, black: 0, queen: 0 };
+  gameOver = false;
+  winnerLabel = '';
   coins = createCoins();
   currentPlayer = playerName;
   dragging = false;
@@ -125,6 +133,10 @@ function updateStatus(message = '') {
     statusEl.textContent = '名前と色を選んで「開始」を押してください。下の余白までドラッグできます。';
     return;
   }
+  if (gameOver) {
+    statusEl.textContent = `ゲーム終了！勝者: ${winnerLabel}`;
+    return;
+  }
   const turnLabel = currentPlayer === playerName ? 'プレイヤー' : 'AI';
   statusEl.textContent = `${turnLabel}のターン ・ 残りコイン: ${coins.length}/${TOTAL_COINS}`;
 }
@@ -135,13 +147,17 @@ function awardPoints(removedCoins) {
   for (const coin of removedCoins) {
     if (coin.owner === playerColor) {
       scores.player += 1;
+      pocketedByPlayer[playerColor] += 1;
     } else if (coin.owner === aiColor) {
       scores.ai += 1;
+      pocketedByAI[aiColor] += 1;
     } else {
       if (currentPlayer === playerName) {
         scores.player += 5;
+        pocketedByPlayer.queen += 1;
       } else {
         scores.ai += 5;
+        pocketedByAI.queen += 1;
       }
     }
   }
@@ -350,9 +366,37 @@ function isMoving() {
   return striker && [striker, ...coins].some((p) => Math.abs(p.vx) > 0 || Math.abs(p.vy) > 0);
 }
 
-function finishTurn() {
+function determineWinner() {
+  const playerAllOwnAndRed = pocketedByPlayer[playerColor] >= 9 && pocketedByPlayer.queen >= 1;
+  const aiAllOwnAndRed = pocketedByAI[aiColor] >= 9 && pocketedByAI.queen >= 1;
+
+  if (playerAllOwnAndRed) {
+    winnerLabel = `${playerName}（自分のコイン+赤）`;
+    return true;
+  }
+  if (aiAllOwnAndRed) {
+    winnerLabel = 'AI（自分のコイン+赤）';
+    return true;
+  }
+
   if (coins.length === 0) {
-    updateStatus(`ゲーム終了！ ${playerName}: ${scores.player}点 / AI: ${scores.ai}点`);
+    if (scores.player > scores.ai) {
+      winnerLabel = `${playerName}（全コイン完了）`;
+    } else if (scores.ai > scores.player) {
+      winnerLabel = 'AI（全コイン完了）';
+    } else {
+      winnerLabel = '引き分け（全コイン完了）';
+    }
+    return true;
+  }
+
+  return false;
+}
+
+function finishTurn() {
+  if (determineWinner()) {
+    gameOver = true;
+    updateStatus();
     return;
   }
   currentPlayer = currentPlayer === playerName ? AI : playerName;
@@ -398,7 +442,7 @@ function aiRiskOnShot(targetCoin, shotDx, shotDy) {
 }
 
 function aiTakeShot() {
-  if (currentPlayer !== AI || !gameStarted || shotInProgress || isMoving() || !coins.length) return;
+  if (gameOver || currentPlayer !== AI || !gameStarted || shotInProgress || isMoving() || !coins.length) return;
 
   const ownCoins = coins.filter((c) => c.owner === aiColor);
   const targetPool = ownCoins.length ? ownCoins : coins.filter((c) => c.owner !== playerColor);
@@ -448,7 +492,7 @@ function render() {
 
   drawBoard();
 
-  if (gameStarted) {
+  if (gameStarted && !gameOver) {
     movePiece(striker);
     for (const coin of coins) movePiece(coin);
 
@@ -503,7 +547,7 @@ function render() {
 }
 
 canvas.addEventListener('pointerdown', (e) => {
-  if (!gameStarted || currentPlayer !== playerName || shotInProgress || isMoving()) return;
+  if (gameOver || !gameStarted || currentPlayer !== playerName || shotInProgress || isMoving()) return;
   const pos = getPointerPos(e);
   if (Math.hypot(pos.x - striker.x, pos.y - striker.y) <= striker.r + 12) {
     dragging = true;
@@ -517,7 +561,7 @@ window.addEventListener('pointermove', (e) => {
 });
 
 window.addEventListener('pointerup', () => {
-  if (!dragging || !dragPoint || currentPlayer !== playerName || !gameStarted) return;
+  if (gameOver || !dragging || !dragPoint || currentPlayer !== playerName || !gameStarted) return;
   const dx = striker.x - dragPoint.x;
   const dy = striker.y - dragPoint.y;
 

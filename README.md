@@ -21,6 +21,7 @@ This project now includes a **playable single-board prototype** with:
 - Faster striker/coin movement tuning
 - Extra empty space below board to allow long pull-back gestures
 - Larger board area for improved visibility
+- 勝敗判定（自分色9枚+赤、または全コイン完了）
 - Reset button for replay
 
 It also includes a complete product specification in `SPEC.md` for future multiplayer/backend development.
