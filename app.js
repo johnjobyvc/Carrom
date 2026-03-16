@@ -85,14 +85,29 @@ function createCoins() {
 }
 
 function placeStriker(player) {
+  const line = getStrikerLine(player);
   striker = {
-    x: BOARD.x + BOARD.size / 2,
-    y: player === playerName ? BOARD.y + BOARD.size - 58 : BOARD.y + 58,
+    x: (line.minX + line.maxX) / 2,
+    y: line.y,
     r: STRIKER_R,
     vx: 0,
     vy: 0,
     color: player === playerName ? '#3b82f6' : '#f97316'
   };
+}
+
+function getStrikerLine(player) {
+  return {
+    minX: BOARD.x + 74,
+    maxX: BOARD.x + BOARD.size - 74,
+    y: player === playerName ? BOARD.y + BOARD.size - 58 : BOARD.y + 58
+  };
+}
+
+function placeStrikerOnLine(player, targetX) {
+  const line = getStrikerLine(player);
+  striker.x = clamp(targetX, line.minX, line.maxX);
+  striker.y = line.y;
 }
 
 function refreshScoreboard() {
@@ -471,6 +486,8 @@ function aiTakeShot() {
 
   if (!best) return;
 
+  placeStrikerOnLine(AI, best.coin.x);
+
   const len = Math.hypot(best.dx, best.dy) || 1;
   const speed = 22;
   striker.vx = (best.dx / len) * speed;
@@ -549,6 +566,17 @@ function render() {
 canvas.addEventListener('pointerdown', (e) => {
   if (gameOver || !gameStarted || currentPlayer !== playerName || shotInProgress || isMoving()) return;
   const pos = getPointerPos(e);
+
+  const line = getStrikerLine(playerName);
+  const clickedOnLine =
+    pos.x >= line.minX - 12 &&
+    pos.x <= line.maxX + 12 &&
+    Math.abs(pos.y - line.y) <= 18;
+
+  if (clickedOnLine) {
+    placeStrikerOnLine(playerName, pos.x);
+  }
+
   if (Math.hypot(pos.x - striker.x, pos.y - striker.y) <= striker.r + 12) {
     dragging = true;
     dragPoint = pos;
