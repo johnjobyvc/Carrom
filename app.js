@@ -8,6 +8,7 @@ const BOARD = {
   y: 110,
   size: 580,
   pocketR: 22,
+  pocketCaptureRatio: 0.2,
   wallDamping: 0.92,
   friction: 0.992,
   minSpeed: 0.03
@@ -207,7 +208,31 @@ function pocketed(piece) {
     [BOARD.x, BOARD.y + BOARD.size],
     [BOARD.x + BOARD.size, BOARD.y + BOARD.size]
   ];
-  return corners.some(([cx, cy]) => Math.hypot(piece.x - cx, piece.y - cy) < BOARD.pocketR - 2);
+  return corners.some(([cx, cy]) => {
+    const overlapArea = circleOverlapArea(piece.x, piece.y, piece.r, cx, cy, BOARD.pocketR);
+    const pieceArea = Math.PI * piece.r * piece.r;
+    return overlapArea >= pieceArea * BOARD.pocketCaptureRatio;
+  });
+}
+
+function circleOverlapArea(x1, y1, r1, x2, y2, r2) {
+  const d = Math.hypot(x2 - x1, y2 - y1);
+
+  if (d >= r1 + r2) return 0;
+  if (d <= Math.abs(r1 - r2)) {
+    const minR = Math.min(r1, r2);
+    return Math.PI * minR * minR;
+  }
+
+  const r1Sq = r1 * r1;
+  const r2Sq = r2 * r2;
+
+  const alpha = 2 * Math.acos((d * d + r1Sq - r2Sq) / (2 * d * r1));
+  const beta = 2 * Math.acos((d * d + r2Sq - r1Sq) / (2 * d * r2));
+
+  const area1 = 0.5 * r1Sq * (alpha - Math.sin(alpha));
+  const area2 = 0.5 * r2Sq * (beta - Math.sin(beta));
+  return area1 + area2;
 }
 
 function isMoving() {
