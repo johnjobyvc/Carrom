@@ -14,7 +14,7 @@ const aiScoreEl = document.getElementById('aiScore');
 const BOARD = {
   x: 255,
   y: 90,
-  size: 390,
+  size: 487.5,
   pocketR: 16.56,
   wallDamping: 0.97,
   friction: 0.996,
@@ -224,11 +224,11 @@ function drawBoard() {
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(x + 74, y + size - 58);
-  ctx.lineTo(x + size - 74, y + size - 58);
-  ctx.moveTo(x + 74, y + 58);
-  ctx.lineTo(x + size - 74, y + 58);
-  ctx.strokeStyle = '#b47043';
+  ctx.moveTo(x, y + size - 58);
+  ctx.lineTo(x + size, y + size - 58);
+  ctx.moveTo(x, y + 58);
+  ctx.lineTo(x + size, y + 58);
+  ctx.strokeStyle = '#16a34a';
   ctx.lineWidth = 2;
   ctx.stroke();
 
@@ -489,7 +489,7 @@ function aiTakeShot() {
   placeStrikerOnLine(AI, best.coin.x);
 
   const len = Math.hypot(best.dx, best.dy) || 1;
-  const speed = 22;
+  const speed = 19.8;
   striker.vx = (best.dx / len) * speed;
   striker.vy = (best.dy / len) * speed;
   shotInProgress = true;
@@ -593,8 +593,8 @@ window.addEventListener('pointerup', () => {
   const dx = striker.x - dragPoint.x;
   const dy = striker.y - dragPoint.y;
 
-  striker.vx = clamp(dx * 0.135, -36.45, 36.45);
-  striker.vy = clamp(dy * 0.135, -36.45, 36.45);
+  striker.vx = clamp(dx * 0.1215, -32.805, 32.805);
+  striker.vy = clamp(dy * 0.1215, -32.805, 32.805);
   dragging = false;
   dragPoint = null;
   shotInProgress = true;
