@@ -14,7 +14,7 @@ const aiScoreEl = document.getElementById('aiScore');
 const BOARD = {
   x: 255,
   y: 90,
-  size: 390,
+  size: 429,
   pocketR: 16.56,
   wallDamping: 0.97,
   friction: 0.996,
@@ -23,6 +23,7 @@ const BOARD = {
 
 const COIN_R = 12;
 const STRIKER_R = 14;
+const COLLISION_SPREAD_FACTOR = 0.8;
 const TOTAL_COINS = 19;
 const AI = 'AI';
 
@@ -339,7 +340,7 @@ function collide(a, b) {
   if (impulse > 0) return;
 
   const bounce = 0.96;
-  const j = -(1 + bounce) * impulse / 2;
+  const j = (-(1 + bounce) * impulse / 2) * COLLISION_SPREAD_FACTOR;
   a.vx -= j * nx;
   a.vy -= j * ny;
   b.vx += j * nx;
@@ -349,8 +350,8 @@ function collide(a, b) {
 function pocketed(piece) {
   const centers = getPocketCenters();
 
-  // Easier pocketing: keep 12% overlap rule and add ~20% assist.
-  const pocketCaptureDistance = (BOARD.pocketR + piece.r * 0.12) * 1.2;
+  // Require the coin to enter at least 50% of the pocket-hole size.
+  const pocketCaptureDistance = BOARD.pocketR * 0.5;
   return centers.some(([cx, cy]) => Math.hypot(piece.x - cx, piece.y - cy) <= pocketCaptureDistance);
 }
 
