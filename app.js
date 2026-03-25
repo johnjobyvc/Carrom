@@ -348,10 +348,33 @@ function collide(a, b) {
 
 function pocketed(piece) {
   const centers = getPocketCenters();
+  const minOverlapRatio = 0.2;
+  const pieceArea = Math.PI * piece.r * piece.r;
 
-  // Easier pocketing: keep 12% overlap rule and add ~20% assist.
-  const pocketCaptureDistance = (BOARD.pocketR + piece.r * 0.12) * 1.2;
-  return centers.some(([cx, cy]) => Math.hypot(piece.x - cx, piece.y - cy) <= pocketCaptureDistance);
+  return centers.some(([cx, cy]) => {
+    const d = Math.hypot(piece.x - cx, piece.y - cy);
+    const overlapArea = circleOverlapArea(piece.r, BOARD.pocketR, d);
+    return overlapArea / pieceArea >= minOverlapRatio;
+  });
+}
+
+function circleOverlapArea(r1, r2, d) {
+  if (d >= r1 + r2) return 0;
+  if (d <= Math.abs(r1 - r2)) {
+    const containedRadius = Math.min(r1, r2);
+    return Math.PI * containedRadius * containedRadius;
+  }
+
+  const r1Sq = r1 * r1;
+  const r2Sq = r2 * r2;
+  const alpha = Math.acos((d * d + r1Sq - r2Sq) / (2 * d * r1));
+  const beta = Math.acos((d * d + r2Sq - r1Sq) / (2 * d * r2));
+
+  return (
+    r1Sq * alpha +
+    r2Sq * beta -
+    0.5 * Math.sqrt((-d + r1 + r2) * (d + r1 - r2) * (d - r1 + r2) * (d + r1 + r2))
+  );
 }
 
 function keepCoinAwayFromPocket(coin) {
