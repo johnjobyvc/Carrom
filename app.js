@@ -10,6 +10,10 @@ const playerColorLabel = document.getElementById('playerColorLabel');
 const aiColorLabel = document.getElementById('aiColorLabel');
 const playerScoreEl = document.getElementById('playerScore');
 const aiScoreEl = document.getElementById('aiScore');
+const accuracyStatEl = document.getElementById('accuracyStat');
+const hitRateStatEl = document.getElementById('hitRateStat');
+const comboStatEl = document.getElementById('comboStat');
+const skillLevelStatEl = document.getElementById('skillLevelStat');
 
 const BOARD = {
   x: 255,
@@ -43,6 +47,8 @@ let pocketedByAI = { white: 0, black: 0, queen: 0 };
 let gameOver = false;
 let winnerLabel = '';
 let shakeFrames = 0;
+let playerStats = { shots: 0, hits: 0, scoringShots: 0, combo: 0, bestCombo: 0, skillLevel: 1 };
+let currentTurnMetrics = { playerShot: false, contact: false, pocketed: 0 };
 
 function coinColor(colorName) {
   return colorName === 'white' ? '#f8fafc' : '#1f2937';
@@ -116,6 +122,16 @@ function refreshScoreboard() {
   aiColorLabel.textContent = `色: ${colorNameJa(aiColor)}`;
   playerScoreEl.textContent = String(scores.player);
   aiScoreEl.textContent = String(scores.ai);
+  refreshSkillPanel();
+}
+
+function refreshSkillPanel() {
+  const accuracy = playerStats.shots ? Math.round((playerStats.scoringShots / playerStats.shots) * 100) : 0;
+  const hitRate = playerStats.shots ? Math.round((playerStats.hits / playerStats.shots) * 100) : 0;
+  accuracyStatEl.textContent = `${accuracy}%`;
+  hitRateStatEl.textContent = `${hitRate}%`;
+  comboStatEl.textContent = String(playerStats.combo);
+  skillLevelStatEl.textContent = String(playerStats.skillLevel);
 }
 
 function startGame() {
@@ -127,6 +143,8 @@ function startGame() {
   pocketedByAI = { white: 0, black: 0, queen: 0 };
   gameOver = false;
   winnerLabel = '';
+  playerStats = { shots: 0, hits: 0, scoringShots: 0, combo: 0, bestCombo: 0, skillLevel: 1 };
+  currentTurnMetrics = { playerShot: false, contact: false, pocketed: 0 };
   coins = createCoins();
   currentPlayer = playerName;
   dragging = false;
@@ -179,6 +197,10 @@ function awardPoints(removedCoins) {
 
   refreshScoreboard();
   shakeFrames = 12;
+
+  if (currentTurnMetrics.playerShot) {
+    currentTurnMetrics.pocketed += removedCoins.length;
+  }
 }
 
 function getPocketCenters() {
@@ -323,7 +345,7 @@ function collide(a, b) {
   const dy = b.y - a.y;
   const dist = Math.hypot(dx, dy);
   const minDist = a.r + b.r;
-  if (!dist || dist >= minDist) return;
+  if (!dist || dist >= minDist) return false;
 
   const nx = dx / dist;
   const ny = dy / dist;
@@ -336,7 +358,7 @@ function collide(a, b) {
   const dvx = b.vx - a.vx;
   const dvy = b.vy - a.vy;
   const impulse = dvx * nx + dvy * ny;
-  if (impulse > 0) return;
+  if (impulse > 0) return true;
 
   const bounce = 0.96;
   const j = -(1 + bounce) * impulse / 2;
@@ -344,6 +366,7 @@ function collide(a, b) {
   a.vy -= j * ny;
   b.vx += j * nx;
   b.vy += j * ny;
+  return true;
 }
 
 function pocketed(piece) {
@@ -409,6 +432,20 @@ function determineWinner() {
 }
 
 function finishTurn() {
+  if (currentTurnMetrics.playerShot) {
+    playerStats.shots += 1;
+    if (currentTurnMetrics.contact) playerStats.hits += 1;
+    if (currentTurnMetrics.pocketed > 0) {
+      playerStats.scoringShots += 1;
+      playerStats.combo += 1;
+      playerStats.bestCombo = Math.max(playerStats.bestCombo, playerStats.combo);
+    } else {
+      playerStats.combo = 0;
+    }
+    playerStats.skillLevel = 1 + Math.floor((playerStats.scoringShots * 2 + playerStats.hits + playerStats.bestCombo) / 5);
+    refreshSkillPanel();
+  }
+
   if (determineWinner()) {
     gameOver = true;
     updateStatus();
@@ -419,7 +456,92 @@ function finishTurn() {
   dragging = false;
   dragPoint = null;
   shotInProgress = false;
+  currentTurnMetrics = { playerShot: false, contact: false, pocketed: 0 };
   updateStatus();
+}
+
+function getAssistedShotVector(dx, dy) {
+  const baseLen = Math.hypot(dx, dy);
+  if (!baseLen) return { dx, dy };
+
+  const baseAngle = Math.atan2(dy, dx);
+  let bestCoin = null;
+  let bestAngleDiff = Infinity;
+  let bestDistance = Infinity;
+
+  for (const coin of coins) {
+    const toCoinX = coin.x - striker.x;
+    const toCoinY = coin.y - striker.y;
+    const dist = Math.hypot(toCoinX, toCoinY);
+    if (dist < striker.r + coin.r + 8) continue;
+
+    const angle = Math.atan2(toCoinY, toCoinX);
+    const angleDiff = Math.abs(Math.atan2(Math.sin(angle - baseAngle), Math.cos(angle - baseAngle)));
+    if (angleDiff < bestAngleDiff || (angleDiff === bestAngleDiff && dist < bestDistance)) {
+      bestCoin = coin;
+      bestAngleDiff = angleDiff;
+      bestDistance = dist;
+    }
+  }
+
+  if (!bestCoin || bestAngleDiff > 0.2) {
+    return { dx, dy };
+  }
+
+  const snapStrength = clamp((0.2 - bestAngleDiff) / 0.2, 0, 1) * 0.36;
+  const toCoinLen = Math.hypot(bestCoin.x - striker.x, bestCoin.y - striker.y) || 1;
+  const targetDx = (bestCoin.x - striker.x) / toCoinLen;
+  const targetDy = (bestCoin.y - striker.y) / toCoinLen;
+
+  const dirX = dx / baseLen;
+  const dirY = dy / baseLen;
+  const mixedX = dirX * (1 - snapStrength) + targetDx * snapStrength;
+  const mixedY = dirY * (1 - snapStrength) + targetDy * snapStrength;
+  const mixedLen = Math.hypot(mixedX, mixedY) || 1;
+
+  return {
+    dx: (mixedX / mixedLen) * baseLen,
+    dy: (mixedY / mixedLen) * baseLen
+  };
+}
+
+function drawAimAssist() {
+  if (!dragging || !dragPoint || !striker) return;
+  const rawDx = striker.x - dragPoint.x;
+  const rawDy = striker.y - dragPoint.y;
+  const assisted = getAssistedShotVector(rawDx, rawDy);
+  const len = Math.hypot(assisted.dx, assisted.dy);
+  if (len < 10) return;
+
+  let dirX = assisted.dx / len;
+  let dirY = assisted.dy / len;
+  let sx = striker.x;
+  let sy = striker.y;
+
+  ctx.save();
+  ctx.setLineDash([8, 7]);
+  ctx.strokeStyle = 'rgba(30,64,175,0.7)';
+  ctx.lineWidth = 2;
+
+  for (let i = 0; i < 2; i += 1) {
+    const tX = dirX > 0 ? (BOARD.x + BOARD.size - sx) / dirX : (BOARD.x - sx) / dirX;
+    const tY = dirY > 0 ? (BOARD.y + BOARD.size - sy) / dirY : (BOARD.y - sy) / dirY;
+    const t = Math.min(Math.abs(tX), Math.abs(tY), 230);
+    const ex = sx + dirX * t;
+    const ey = sy + dirY * t;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy);
+    ctx.lineTo(ex, ey);
+    ctx.stroke();
+
+    if (t >= 230) break;
+    if (Math.abs(tX) < Math.abs(tY)) dirX *= -1;
+    else dirY *= -1;
+    sx = ex;
+    sy = ey;
+  }
+
+  ctx.restore();
 }
 
 function distancePointToSegment(px, py, x1, y1, x2, y2) {
@@ -514,7 +636,9 @@ function render() {
     for (const coin of coins) movePiece(coin);
 
     for (let i = 0; i < coins.length; i += 1) {
-      collide(striker, coins[i]);
+      if (collide(striker, coins[i]) && currentTurnMetrics.playerShot) {
+        currentTurnMetrics.contact = true;
+      }
       for (let j = i + 1; j < coins.length; j += 1) {
         collide(coins[i], coins[j]);
       }
@@ -539,6 +663,7 @@ function render() {
     }
 
     for (const coin of coins) drawPiece(coin);
+    drawAimAssist();
     drawPiece(striker);
     drawPullGuide();
 
@@ -592,12 +717,14 @@ window.addEventListener('pointerup', () => {
   if (gameOver || !dragging || !dragPoint || currentPlayer !== playerName || !gameStarted) return;
   const dx = striker.x - dragPoint.x;
   const dy = striker.y - dragPoint.y;
+  const assistedShot = getAssistedShotVector(dx, dy);
 
-  striker.vx = clamp(dx * 0.135, -36.45, 36.45);
-  striker.vy = clamp(dy * 0.135, -36.45, 36.45);
+  striker.vx = clamp(assistedShot.dx * 0.135, -36.45, 36.45);
+  striker.vy = clamp(assistedShot.dy * 0.135, -36.45, 36.45);
   dragging = false;
   dragPoint = null;
   shotInProgress = true;
+  currentTurnMetrics = { playerShot: true, contact: false, pocketed: 0 };
   updateStatus('あなたのショット中...');
 });
 
