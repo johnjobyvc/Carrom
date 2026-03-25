@@ -25,7 +25,6 @@ let coins = [];
 let striker = null;
 let dragging = false;
 let dragPoint = null;
-let dragMode = null;
 
 function createCoins() {
   const list = [];
@@ -70,7 +69,6 @@ function resetGame() {
   striker = createStriker();
   dragging = false;
   dragPoint = null;
-  dragMode = null;
   updateStatus();
 }
 
@@ -264,30 +262,29 @@ function render() {
 canvas.addEventListener('pointerdown', (e) => {
   if (isMoving()) return;
   const pos = getPointerPos(e);
-  if (Math.hypot(pos.x - striker.x, pos.y - striker.y) <= striker.r + 10) {
-    dragging = true;
-    dragMode = 'place';
-    dragPoint = { ...pos };
-    canvas.setPointerCapture(e.pointerId);
-  }
-});
 
-canvas.addEventListener('pointermove', (e) => {
-  if (!dragging) return;
-  const pos = getPointerPos(e);
+  const clickedBaseline =
+    pos.x >= BASELINE_MIN_X - STRIKER_R
+    && pos.x <= BASELINE_MAX_X + STRIKER_R
+    && Math.abs(pos.y - BASELINE_Y) <= BASELINE_DRAG_TOLERANCE;
 
-  if (
-    dragMode === 'place'
-    && Math.abs(pos.y - BASELINE_Y) <= BASELINE_DRAG_TOLERANCE
-  ) {
+  if (clickedBaseline) {
     striker.x = clamp(pos.x, BASELINE_MIN_X, BASELINE_MAX_X);
     striker.y = BASELINE_Y + 2;
     dragPoint = null;
     return;
   }
 
-  dragMode = 'aim';
-  dragPoint = pos;
+  if (Math.hypot(pos.x - striker.x, pos.y - striker.y) <= striker.r + 10) {
+    dragging = true;
+    dragPoint = pos;
+    canvas.setPointerCapture(e.pointerId);
+  }
+});
+
+canvas.addEventListener('pointermove', (e) => {
+  if (!dragging) return;
+  dragPoint = getPointerPos(e);
 });
 
 canvas.addEventListener('pointerup', (e) => {
@@ -296,10 +293,9 @@ canvas.addEventListener('pointerup', (e) => {
     canvas.releasePointerCapture(e.pointerId);
   }
 
-  if (dragMode !== 'aim' || !dragPoint) {
+  if (!dragPoint) {
     dragging = false;
     dragPoint = null;
-    dragMode = null;
     return;
   }
 
@@ -313,13 +309,11 @@ canvas.addEventListener('pointerup', (e) => {
 
   dragging = false;
   dragPoint = null;
-  dragMode = null;
 });
 
 canvas.addEventListener('pointercancel', () => {
   dragging = false;
   dragPoint = null;
-  dragMode = null;
 });
 
 function clamp(v, min, max) {
