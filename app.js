@@ -16,11 +16,16 @@ const BOARD = {
 const COIN_R = 14;
 const STRIKER_R = 16;
 const TOTAL_COINS = 20;
+const BASELINE_Y = BOARD.y + BOARD.size - 60;
+const BASELINE_MIN_X = BOARD.x + 130 + STRIKER_R;
+const BASELINE_MAX_X = BOARD.x + BOARD.size - 130 - STRIKER_R;
+const BASELINE_DRAG_TOLERANCE = 34;
 
 let coins = [];
 let striker = null;
 let dragging = false;
 let dragPoint = null;
+let dragMode = null;
 
 function createCoins() {
   const list = [];
@@ -51,8 +56,8 @@ function createCoins() {
 
 function createStriker() {
   return {
-    x: BOARD.x + BOARD.size / 2,
-    y: BOARD.y + BOARD.size - 58,
+    x: (BASELINE_MIN_X + BASELINE_MAX_X) / 2,
+    y: BASELINE_Y + 2,
     r: STRIKER_R,
     vx: 0,
     vy: 0,
@@ -65,6 +70,7 @@ function resetGame() {
   striker = createStriker();
   dragging = false;
   dragPoint = null;
+  dragMode = null;
   updateStatus();
 }
 
@@ -97,8 +103,8 @@ function drawBoard() {
 
   // Baseline and striker guide
   ctx.beginPath();
-  ctx.moveTo(x + 130, y + size - 60);
-  ctx.lineTo(x + size - 130, y + size - 60);
+  ctx.moveTo(BASELINE_MIN_X - STRIKER_R, BASELINE_Y);
+  ctx.lineTo(BASELINE_MAX_X + STRIKER_R, BASELINE_Y);
   ctx.stroke();
 
   // Pockets
@@ -260,17 +266,43 @@ canvas.addEventListener('pointerdown', (e) => {
   const pos = getPointerPos(e);
   if (Math.hypot(pos.x - striker.x, pos.y - striker.y) <= striker.r + 10) {
     dragging = true;
-    dragPoint = pos;
+    dragMode = 'place';
+    dragPoint = { ...pos };
+    canvas.setPointerCapture(e.pointerId);
   }
 });
 
 canvas.addEventListener('pointermove', (e) => {
   if (!dragging) return;
-  dragPoint = getPointerPos(e);
+  const pos = getPointerPos(e);
+
+  if (
+    dragMode === 'place'
+    && Math.abs(pos.y - BASELINE_Y) <= BASELINE_DRAG_TOLERANCE
+  ) {
+    striker.x = clamp(pos.x, BASELINE_MIN_X, BASELINE_MAX_X);
+    striker.y = BASELINE_Y + 2;
+    dragPoint = null;
+    return;
+  }
+
+  dragMode = 'aim';
+  dragPoint = pos;
 });
 
-canvas.addEventListener('pointerup', () => {
-  if (!dragging || !dragPoint) return;
+canvas.addEventListener('pointerup', (e) => {
+  if (!dragging) return;
+  if (canvas.hasPointerCapture(e.pointerId)) {
+    canvas.releasePointerCapture(e.pointerId);
+  }
+
+  if (dragMode !== 'aim' || !dragPoint) {
+    dragging = false;
+    dragPoint = null;
+    dragMode = null;
+    return;
+  }
+
   const dx = striker.x - dragPoint.x;
   const dy = striker.y - dragPoint.y;
   const powerScale = 0.065;
@@ -281,6 +313,13 @@ canvas.addEventListener('pointerup', () => {
 
   dragging = false;
   dragPoint = null;
+  dragMode = null;
+});
+
+canvas.addEventListener('pointercancel', () => {
+  dragging = false;
+  dragPoint = null;
+  dragMode = null;
 });
 
 function clamp(v, min, max) {
